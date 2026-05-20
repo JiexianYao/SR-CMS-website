@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户管理后台 CMS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #23273a;
+      --border: #2e3347;
+      --accent: #6c63ff;
+      --accent-hover: #857dff;
+      --danger: #e05c5c;
+      --danger-hover: #f07070;
+      --success: #4caf84;
+      --text: #e2e6f0;
+      --text-muted: #7b82a0;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── 视图切换 ── */
+    .view {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      animation: fadeIn .3s ease;
+    }
+    .view.active { display: flex; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ════════════════════════════════
+       索引页
+    ════════════════════════════════ */
+    #view-index {
+      flex-direction: column;
+      padding-bottom: 0;
+    }
+
+    .index-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px 32px;
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .brand-icon {
+      width: 54px; height: 54px;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin: 0 auto 14px;
+      box-shadow: 0 8px 28px rgba(108,99,255,.3);
+    }
+    .brand h1 { font-size: 1.45rem; font-weight: 700; color: #fff; letter-spacing: .02em; }
+    .brand p  { color: var(--text-muted); font-size: .84rem; margin-top: 6px; }
+
+    .menu-grid {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .menu-item {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s, box-shadow .2s;
+      text-align: left;
+      width: 100%;
+    }
+    .menu-item:hover {
+      background: #1e2133;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    }
+    .menu-item.selected-grant {
+      border-color: var(--accent);
+      background: rgba(108,99,255,.07);
+    }
+    .menu-item.selected-delete {
+      border-color: var(--danger);
+      background: rgba(224,92,92,.07);
+    }
+    .menu-item:active { transform: translateY(0); }
+
+    .menu-icon {
+      width: 46px; height: 46px;
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .menu-icon.blue { background: rgba(108,99,255,.18); }
+    .menu-icon.red  { background: rgba(224,92,92,.18);  }
+
+    .menu-text { flex: 1; }
+    .menu-text strong {
+      display: block;
+      font-size: .98rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 3px;
+    }
+    .menu-text span { font-size: .8rem; color: var(--text-muted); }
+
+    .menu-arrow {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      transition: transform .2s, color .2s;
+    }
+    .menu-item.selected-grant .menu-arrow { color: var(--accent); transform: rotate(90deg); }
+    .menu-item.selected-delete .menu-arrow { color: var(--danger); transform: rotate(90deg); }
+
+    /* ── 底部密钥抽屉 ── */
+    .secret-drawer {
+      width: 100%;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height .4s cubic-bezier(.4,0,.2,1), padding .4s ease;
+      padding: 0;
+    }
+    .secret-drawer.open {
+      max-height: 260px;
+      padding: 28px 20px 32px;
+    }
+
+    .drawer-inner {
+      max-width: 500px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .drawer-label {
+      font-size: .78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drawer-label::before {
+      content: '';
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    #drawer-label-text.danger-mode::before { background: var(--danger); }
+
+    .drawer-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .drawer-input-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .drawer-input-row input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,.15);
+    }
+    .drawer-input-row input.danger-focus:focus {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(224,92,92,.12);
+    }
+
+    .btn-confirm {
+      padding: 11px 22px;
+      border: none;
+      border-radius: 8px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, transform .1s;
+      color: #fff;
+    }
+    .btn-confirm:active:not(:disabled) { transform: scale(.97); }
+    .btn-confirm:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-confirm.accent { background: var(--accent); }
+    .btn-confirm.accent:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-confirm.danger { background: var(--danger); }
+    .btn-confirm.danger:hover:not(:disabled) { background: var(--danger-hover); }
+
+    .drawer-cancel {
+      text-align: center;
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+    .drawer-cancel button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: .8rem;
+      padding: 2px 6px;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .drawer-cancel button:hover { color: var(--text); }
+
+    /* ════════════════════════════════
+       功能页（发放 / 删除 共用外壳）
+    ════════════════════════════════ */
+    .feature-view {
+      flex-direction: column;
+      align-items: center;
+      padding: 36px 20px 48px;
+    }
+
+    .feature-topbar {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .back-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: .85rem;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .page-badge {
+      font-size: .78rem;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+    }
+
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 520px;
+      overflow: hidden;
+    }
+    .feature-card-header {
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .fch-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+    }
+    .fch-icon.red  { background: rgba(224,92,92,.18); }
+    .fch-icon.blue { background: rgba(108,99,255,.18); }
+    .feature-card-header h2 { font-size: 1rem; font-weight: 600; }
+    .feature-card-body { padding: 24px; }
+
+    /* ── 表单 ── */
+    label {
+      display: block;
+      font-size: .78rem;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+      font-weight: 500;
+      letter-spacing: .04em;
+    }
+    .field { margin-bottom: 18px; }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,.15);
+    }
+
+    select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: .9rem;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237b82a0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 34px;
+      transition: border-color .2s;
+    }
+    select:focus { border-color: var(--accent); }
+    select option { background: var(--surface2); color: var(--text); }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* ── 按钮 ── */
+    button.btn-accent {
+      padding: 11px 24px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    button.btn-accent:hover:not(:disabled) { background: var(--accent-hover); }
+    button.btn-accent:active:not(:disabled) { transform: scale(.97); }
+    button.btn-accent:disabled { opacity: .45; cursor: not-allowed; }
+
+    button.btn-danger {
+      padding: 11px 24px;
+      background: var(--danger); color: #fff;
+      border: none; border-radius: 8px;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    button.btn-danger:hover:not(:disabled) { background: var(--danger-hover); }
+    button.btn-danger:active:not(:disabled) { transform: scale(.97); }
+    button.btn-danger:disabled { opacity: .45; cursor: not-allowed; }
+
+    button.btn-outline {
+      padding: 10px 20px;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .88rem; font-weight: 600; cursor: pointer;
+      transition: border-color .2s, color .2s;
+    }
+    button.btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    button.btn-outline:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ── 结果区 ── */
+    .result {
+      margin-top: 18px;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: .84rem;
+      line-height: 1.6;
+      display: none;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .result.ok  { display: block; background: rgba(76,175,132,.1);  border: 1px solid rgba(76,175,132,.3);  color: #5dd8a0; }
+    .result.err { display: block; background: rgba(224,92,92,.1);   border: 1px solid rgba(224,92,92,.3);   color: #f08888; }
+
+    /* ── 资产卡 ── */
+    .asset-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-top: 14px;
+      display: none;
+    }
+    .asset-card.show { display: block; }
+    .asset-card .kv  { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .asset-card .kv:last-child { border-bottom: none; }
+    .asset-card .k   { color: var(--text-muted); font-size: .82rem; }
+    .asset-card .v   { font-weight: 600; font-size: .9rem; }
+
+    /* ── 确认弹窗 ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.65);
+      display: none;
+      align-items: center; justify-content: center;
+      z-index: 999;
+      backdrop-filter: blur(3px);
+    }
+    .overlay.show { display: flex; }
+    .dialog {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 30px;
+      max-width: 400px; width: 90%;
+      animation: fadeIn .2s ease;
+    }
+    .dialog h3 { margin-bottom: 10px; font-size: 1.05rem; }
+    .dialog p  { color: var(--text-muted); font-size: .88rem; margin-bottom: 24px; line-height: 1.65; }
+    .dialog .row { justify-content: flex-end; }
+
+    /* ── spinner ── */
+    .spin {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── toast ── */
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      padding: 10px 24px;
+      border-radius: 24px;
+      font-size: .875rem; font-weight: 600;
+      z-index: 1000; opacity: 0;
+      transition: opacity .3s;
+      pointer-events: none; white-space: nowrap;
+    }
+    .toast.ok  { background: var(--success); color: #fff; }
+    .toast.err { background: var(--danger);  color: #fff; }
+    .toast.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════
+     视图 1：索引页（含底部密钥抽屉）
+════════════════════════════════════ -->
+<div class="view active" id="view-index">
+
+  <!-- 主体内容 -->
+  <div class="index-main">
+    <div class="brand">
+      <div class="brand-icon">⚙️</div>
+      <h1>用户管理后台</h1>
+      <p>选择操作功能后输入密钥进入</p>
+    </div>
+
+    <div class="menu-grid" id="menuGrid">
+      <button class="menu-item" id="item-grant" onclick="selectFeature('grant')">
+        <div class="menu-icon blue">💰</div>
+        <div class="menu-text">
+          <strong>指定用户额度发放</strong>
+          <span>为指定手机号用户发放永久或临时使用额度</span>
+        </div>
+        <span class="menu-arrow">›</span>
+      </button>
+
+      <button class="menu-item" id="item-delete" onclick="selectFeature('delete')">
+        <div class="menu-icon red">🗑️</div>
+        <div class="menu-text">
+          <strong>指定用户删除</strong>
+          <span>永久删除用户数据库记录与身份认证信息</span>
+        </div>
+        <span class="menu-arrow">›</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- 底部密钥抽屉 -->
+  <div class="secret-drawer" id="secretDrawer">
+    <div class="drawer-inner">
+      <div class="drawer-label">
+        <span id="drawer-label-text">验证操作密钥后进入功能</span>
+      </div>
+      <div class="drawer-input-row">
+        <input type="password" id="drawerSecret"
+               placeholder="输入操作密钥后按回车确认"
+               autocomplete="off" />
+        <button class="btn-confirm accent" id="drawerConfirmBtn" onclick="handleDrawerConfirm()">
+          确认进入
+        </button>
+      </div>
+      <div class="drawer-cancel">
+        <button onclick="cancelSelection()">取消选择</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════
+     视图 2：额度发放
+════════════════════════════════════ -->
+<div class="view feature-view" id="view-grant">
+  <div class="feature-topbar">
+    <button class="back-btn" onclick="goBack()">‹ 返回</button>
+    <span class="page-badge">额度发放</span>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-header">
+      <div class="fch-icon blue">💰</div>
+      <h2>指定用户额度发放</h2>
+    </div>
+    <div class="feature-card-body">
+      <div class="field">
+        <label for="grantPhone">用户手机号</label>
+        <input type="text" id="grantPhone" placeholder="+8613800138000 或 13800138000" maxlength="20" />
+      </div>
+
+      <div class="field">
+        <button class="btn-outline" onclick="queryAsset()">查看当前资产</button>
+        <div class="asset-card" id="assetCard"></div>
+      </div>
+
+      <div class="row" style="gap:12px; margin-bottom:18px">
+        <div class="field" style="flex:1; margin-bottom:0">
+          <label for="grantBusinessLine">业务线</label>
+          <select id="grantBusinessLine">
+            <option value="einvoice">einvoice（发票重命名）</option>
+            <option value="creditid">creditid（企业执照）</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1; margin-bottom:0">
+          <label for="grantQuotaType">额度类型</label>
+          <select id="grantQuotaType">
+            <option value="permanent_rename">permanent_rename（永久）</option>
+            <option value="temporary_rename">temporary_rename（临时）</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="grantAmount">发放数量（张数，正整数）</label>
+        <input type="number" id="grantAmount" placeholder="例如 50" min="1" step="1" />
+      </div>
+      <div class="field">
+        <label for="grantReason">备注描述（可选）</label>
+        <input type="text" id="grantReason" placeholder="例如：体验活动发放" />
+      </div>
+      <div class="row">
+        <button class="btn-accent" id="grantBtn" onclick="grantCredit()">发放额度</button>
+      </div>
+      <div class="result" id="grantResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════
+     视图 3：用户删除
+════════════════════════════════════ -->
+<div class="view feature-view" id="view-delete">
+  <div class="feature-topbar">
+    <button class="back-btn" onclick="goBack()">‹ 返回</button>
+    <span class="page-badge">用户删除</span>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-header">
+      <div class="fch-icon red">🗑️</div>
+      <h2>指定用户删除</h2>
+    </div>
+    <div class="feature-card-body">
+      <div class="field">
+        <label for="deletePhone">用户手机号</label>
+        <input type="text" id="deletePhone" placeholder="+8613800138000 或 13800138000" maxlength="20" />
+      </div>
+      <div class="row">
+        <button class="btn-danger" id="deleteBtn" onclick="confirmDelete()">删除用户</button>
+      </div>
+      <div class="result" id="deleteResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 删除确认弹窗 ── -->
+<div class="overlay" id="confirmOverlay">
+  <div class="dialog">
+    <h3>⚠️ 确认删除用户？</h3>
+    <p id="confirmText">此操作不可撤销，将同时删除用户数据库记录和身份认证信息。</p>
+    <div class="row">
+      <button class="btn-outline" onclick="closeConfirm()">取消</button>
+      <button class="btn-danger" onclick="doDelete()">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const SCF_BASE_URL = 'https://1330183223-eg4epys48q.ap-shanghai.tencentscf.com';
+
+  let pendingFeature = null; // 'grant' | 'delete'
+
+  // ─── 视图管理 ────────────────────────────────────────────
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function goBack() {
+    // 清掉密钥输入，关闭抽屉，回索引
+    document.getElementById('drawerSecret').value = '';
+    cancelSelection();
+    showView('index');
+  }
+
+  // ─── 功能选择 + 抽屉 ─────────────────────────────────────
+  function selectFeature(name) {
+    pendingFeature = name;
+
+    // 高亮选中项，重置另一项
+    document.getElementById('item-grant').className  = 'menu-item' + (name === 'grant'  ? ' selected-grant'  : '');
+    document.getElementById('item-delete').className = 'menu-item' + (name === 'delete' ? ' selected-delete' : '');
+
+    // 更新抽屉样式
+    const labelEl  = document.getElementById('drawer-label-text');
+    const confirmBtn = document.getElementById('drawerConfirmBtn');
+    const secretInput = document.getElementById('drawerSecret');
+
+    if (name === 'grant') {
+      labelEl.textContent = '已选：额度发放 — 请输入操作密钥';
+      labelEl.className   = '';
+      confirmBtn.className = 'btn-confirm accent';
+      confirmBtn.textContent = '验证并进入';
+      secretInput.className  = '';
+    } else {
+      labelEl.textContent = '已选：用户删除 — 请输入操作密钥';
+      labelEl.className   = 'danger-mode';
+      confirmBtn.className = 'btn-confirm danger';
+      confirmBtn.textContent = '验证并进入';
+      secretInput.className  = 'danger-focus';
+    }
+
+    // 打开抽屉
+    document.getElementById('secretDrawer').classList.add('open');
+    setTimeout(() => document.getElementById('drawerSecret').focus(), 420);
+  }
+
+  function cancelSelection() {
+    pendingFeature = null;
+    document.getElementById('secretDrawer').classList.remove('open');
+    document.getElementById('item-grant').className  = 'menu-item';
+    document.getElementById('item-delete').className = 'menu-item';
+    document.getElementById('drawerSecret').value = '';
+  }
+
+  // 回车触发验证
+  document.getElementById('drawerSecret').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleDrawerConfirm();
+    if (e.key === 'Escape') cancelSelection();
+  });
+
+  // ─── 密钥验证 ────────────────────────────────────────────
+  async function handleDrawerConfirm() {
+    const secret = document.getElementById('drawerSecret').value.trim();
+    if (!secret) { showToast('请输入操作密钥', 'err'); return; }
+
+    const btn = document.getElementById('drawerConfirmBtn');
+    const orig = btn.textContent;
+    btn.innerHTML = '<span class="spin"></span>验证中…';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(SCF_BASE_URL + '/queryAsset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, phoneNumber: '__auth_check__' }),
+      });
+
+      if (res.status === 401) {
+        showToast('密钥错误，拒绝访问', 'err');
+        document.getElementById('drawerSecret').value = '';
+        document.getElementById('drawerSecret').focus();
+      } else if (res.ok || res.status === 404) {
+        // 404 = 用户不存在但密钥正确（__auth_check__ 是虚拟号码）
+        window._adminSecret = secret;
+        const target = pendingFeature;
+        showToast('验证通过', 'ok');
+        cancelSelection();
+        setTimeout(() => showView(target || 'index'), 300);
+      } else {
+        showToast('服务器异常，请稍后重试 (HTTP ' + res.status + ')', 'err');
+      }
+    } catch (e) {
+      showToast('网络错误: ' + e.message, 'err');
+    } finally {
+      btn.innerHTML = orig;
+      btn.disabled = false;
+    }
+  }
+
+  // ─── 工具函数 ────────────────────────────────────────────
+  function getSecret() {
+    return window._adminSecret || '';
+  }
+
+  function showResult(elId, ok, text) {
+    const el = document.getElementById(elId);
+    el.className = 'result ' + (ok ? 'ok' : 'err');
+    el.textContent = text;
+  }
+  function hideResult(elId) {
+    const el = document.getElementById(elId);
+    el.className = 'result'; el.textContent = '';
+  }
+
+  function showToast(msg, type = 'ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' visible';
+    setTimeout(() => t.className = 'toast ' + type, 2500);
+  }
+
+  function setLoading(btn, loading) {
+    if (loading) {
+      btn.dataset.origText = btn.innerHTML;
+      btn.innerHTML = '<span class="spin"></span>处理中…';
+      btn.disabled = true;
+    } else {
+      btn.innerHTML = btn.dataset.origText || btn.innerHTML;
+      btn.disabled = false;
+    }
+  }
+
+  async function apiFetch(path, data) {
+    const res = await fetch(SCF_BASE_URL + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: getSecret(), ...data }),
+    });
+    const json = await res.json();
+    return { ok: res.ok && json.success, json };
+  }
+
+  // ─── 删除确认 ────────────────────────────────────────────
+  function confirmDelete() {
+    const phone = document.getElementById('deletePhone').value.trim();
+    if (!phone) { showToast('请输入要删除的手机号', 'err'); return; }
+    document.getElementById('confirmText').textContent =
+      `将永久删除手机号为「${phone}」的用户，包括数据库记录和身份认证信息，此操作不可撤销！`;
+    document.getElementById('confirmOverlay').classList.add('show');
+  }
+  function closeConfirm() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+  }
+
+  async function doDelete() {
+    closeConfirm();
+    const phone = document.getElementById('deletePhone').value.trim();
+    const btn = document.getElementById('deleteBtn');
+    hideResult('deleteResult');
+    setLoading(btn, true);
+    try {
+      const { ok, json } = await apiFetch('/deleteUser', { phoneNumber: phone });
+      showResult('deleteResult', ok,
+        ok ? `✓ 删除成功\n${JSON.stringify(json.data, null, 2)}`
+           : `✗ 失败：${json.message}\n${JSON.stringify(json, null, 2)}`
+      );
+      if (ok) showToast('用户删除成功', 'ok');
+    } catch (e) {
+      showResult('deleteResult', false, '请求失败: ' + e.message);
+    } finally {
+      setLoading(btn, false);
+    }
+  }
+
+  // ─── 查询资产 ─────────────────────────────────────────────
+  async function queryAsset() {
+    const phone = document.getElementById('grantPhone').value.trim();
+    if (!phone) { showToast('请输入手机号', 'err'); return; }
+    const btn = event.currentTarget;
+    const cardEl = document.getElementById('assetCard');
+    cardEl.className = 'asset-card';
+    setLoading(btn, true);
+    try {
+      const { ok, json } = await apiFetch('/queryAsset', { phoneNumber: phone });
+      if (ok && json.data) {
+        const { userInfo, assetSummary, assetDetails } = json.data;
+        const rows = [
+          ['手机号',        userInfo.phone_number || phone],
+          ['UID',           userInfo.uid || '—'],
+          ['昵称',          userInfo.nickName || '—'],
+          ['永久额度 (张)', assetSummary.permanent_rename ?? '—'],
+          ['临时额度 (张)', assetSummary.temporary_rename ?? '—'],
+          ['合计可用 (张)', assetSummary.total ?? '—'],
+        ];
+        let html = rows.map(([k, v]) =>
+          `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`
+        ).join('');
+        if (assetDetails && assetDetails.length > 0) {
+          html += `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--text-muted);font-size:.8rem">▸ 资产明细 (${assetDetails.length} 条)</summary><pre style="font-size:.75rem;margin-top:8px;color:var(--text-muted);overflow:auto;max-height:180px">${JSON.stringify(assetDetails, null, 2)}</pre></details>`;
+        }
+        cardEl.innerHTML = html;
+        cardEl.classList.add('show');
+      } else {
+        showToast(json.message || '查询失败', 'err');
+      }
+    } catch (e) {
+      showToast('请求失败: ' + e.message, 'err');
+    } finally {
+      setLoading(btn, false);
+    }
+  }
+
+  // ─── 发放额度 ─────────────────────────────────────────────
+  async function grantCredit() {
+    const phone         = document.getElementById('grantPhone').value.trim();
+    const amount        = document.getElementById('grantAmount').value.trim();
+    const reason        = document.getElementById('grantReason').value.trim();
+    const business_line = document.getElementById('grantBusinessLine').value;
+    const quota_type    = document.getElementById('grantQuotaType').value;
+    if (!phone)  { showToast('请输入手机号', 'err'); return; }
+    if (!amount || parseInt(amount) <= 0) { showToast('请输入有效的发放数量（正整数）', 'err'); return; }
+
+    const btn = document.getElementById('grantBtn');
+    hideResult('grantResult');
+    setLoading(btn, true);
+    try {
+      const { ok, json } = await apiFetch('/grantCredit', {
+        phoneNumber: phone, amount: parseInt(amount),
+        business_line, quota_type,
+        source_type: 'event',
+        desc: reason || undefined,
+      });
+      showResult('grantResult', ok,
+        ok ? `✓ 发放成功\n${JSON.stringify(json.data, null, 2)}`
+           : `✗ 失败：${json.message}\n${JSON.stringify(json, null, 2)}`
+      );
+      if (ok) {
+        showToast('额度发放成功', 'ok');
+        document.getElementById('grantAmount').value = '';
+        await queryAsset();
+      }
+    } catch (e) {
+      showResult('grantResult', false, '请求失败: ' + e.message);
+    } finally {
+      setLoading(btn, false);
+    }
+  }
+</script>
+</body>
+</html>
