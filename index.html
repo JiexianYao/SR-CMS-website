@@ -19,7 +19,7 @@
       --success: #4caf84;
       --text: #e2e6f0;
       --text-muted: #7b82a0;
-      --radius: 10px;
+      --radius: 12px;
     }
 
     body {
@@ -29,163 +29,385 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      padding: 32px 16px;
     }
 
-    h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      margin-bottom: 6px;
-      color: #fff;
+    /* ── 视图切换 ── */
+    .view {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      animation: fadeIn .3s ease;
     }
-    .subtitle { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 32px; }
+    .view.active { display: flex; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
 
-    /* ── 密钥区 ── */
-    .secret-bar {
-      width: 100%;
-      max-width: 680px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 18px 22px;
-      display: flex;
-      gap: 12px;
-      align-items: flex-end;
-      margin-bottom: 28px;
+    /* ════════════════════════════════
+       索引页
+    ════════════════════════════════ */
+    #view-index {
+      flex-direction: column;
+      padding-bottom: 0;
     }
-    .secret-bar .field { flex: 1; }
-    .secret-status {
-      font-size: 0.8rem;
-      padding: 4px 12px;
-      border-radius: 20px;
-      white-space: nowrap;
-      align-self: center;
-    }
-    .secret-status.ok  { background: rgba(76,175,132,.15); color: var(--success); }
-    .secret-status.err { background: rgba(224,92,92,.15);  color: var(--danger);  }
-    .secret-status.idle{ background: var(--surface2); color: var(--text-muted); }
 
-    /* ── 面板 ── */
-    .panels {
-      width: 100%;
-      max-width: 680px;
+    .index-main {
+      flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 20px 32px;
     }
 
-    .panel {
+    .brand {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .brand-icon {
+      width: 54px; height: 54px;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      margin: 0 auto 14px;
+      box-shadow: 0 8px 28px rgba(108,99,255,.3);
+    }
+    .brand h1 { font-size: 1.45rem; font-weight: 700; color: #fff; letter-spacing: .02em; }
+    .brand p  { color: var(--text-muted); font-size: .84rem; margin-top: 6px; }
+
+    .menu-grid {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .menu-item {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 22px 22px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s, transform .15s, box-shadow .2s;
+      text-align: left;
+      width: 100%;
+    }
+    .menu-item:hover {
+      background: #1e2133;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.3);
+    }
+    .menu-item.selected-grant {
+      border-color: var(--accent);
+      background: rgba(108,99,255,.07);
+    }
+    .menu-item.selected-delete {
+      border-color: var(--danger);
+      background: rgba(224,92,92,.07);
+    }
+    .menu-item:active { transform: translateY(0); }
+
+    .menu-icon {
+      width: 46px; height: 46px;
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .menu-icon.blue { background: rgba(108,99,255,.18); }
+    .menu-icon.red  { background: rgba(224,92,92,.18);  }
+
+    .menu-text { flex: 1; }
+    .menu-text strong {
+      display: block;
+      font-size: .98rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 3px;
+    }
+    .menu-text span { font-size: .8rem; color: var(--text-muted); }
+
+    .menu-arrow {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+      transition: transform .2s, color .2s;
+    }
+    .menu-item.selected-grant .menu-arrow { color: var(--accent); transform: rotate(90deg); }
+    .menu-item.selected-delete .menu-arrow { color: var(--danger); transform: rotate(90deg); }
+
+    /* ── 底部密钥抽屉 ── */
+    .secret-drawer {
+      width: 100%;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height .4s cubic-bezier(.4,0,.2,1), padding .4s ease;
+      padding: 0;
+    }
+    .secret-drawer.open {
+      max-height: 260px;
+      padding: 28px 20px 32px;
+    }
+
+    .drawer-inner {
+      max-width: 500px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .drawer-label {
+      font-size: .78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drawer-label::before {
+      content: '';
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    #drawer-label-text.danger-mode::before { background: var(--danger); }
+
+    .drawer-input-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .drawer-input-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .drawer-input-row input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,.15);
+    }
+    .drawer-input-row input.danger-focus:focus {
+      border-color: var(--danger);
+      box-shadow: 0 0 0 3px rgba(224,92,92,.12);
+    }
+
+    .btn-confirm {
+      padding: 11px 22px;
+      border: none;
+      border-radius: 8px;
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .2s, transform .1s;
+      color: #fff;
+    }
+    .btn-confirm:active:not(:disabled) { transform: scale(.97); }
+    .btn-confirm:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-confirm.accent { background: var(--accent); }
+    .btn-confirm.accent:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-confirm.danger { background: var(--danger); }
+    .btn-confirm.danger:hover:not(:disabled) { background: var(--danger-hover); }
+
+    .drawer-cancel {
+      text-align: center;
+      font-size: .8rem;
+      color: var(--text-muted);
+    }
+    .drawer-cancel button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: .8rem;
+      padding: 2px 6px;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    .drawer-cancel button:hover { color: var(--text); }
+
+    /* ════════════════════════════════
+       功能页（发放 / 删除 共用外壳）
+    ════════════════════════════════ */
+    .feature-view {
+      flex-direction: column;
+      align-items: center;
+      padding: 36px 20px 48px;
+    }
+
+    .feature-topbar {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+    .back-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: .85rem;
+      cursor: pointer;
+      transition: border-color .2s, color .2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .page-badge {
+      font-size: .78rem;
+      color: var(--text-muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 4px 12px;
+    }
+
+    .feature-card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
+      width: 100%;
+      max-width: 520px;
       overflow: hidden;
     }
-    .panel-header {
-      padding: 14px 22px;
+    .feature-card-header {
       background: var(--surface2);
       border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 10px;
+      padding: 16px 24px;
+      display: flex; align-items: center; gap: 12px;
     }
-    .panel-icon {
-      width: 32px; height: 32px;
-      border-radius: 8px;
+    .fch-icon {
+      width: 36px; height: 36px;
+      border-radius: 9px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1rem;
+      font-size: 1.1rem;
     }
-    .panel-icon.red   { background: rgba(224,92,92,.15);  }
-    .panel-icon.blue  { background: rgba(108,99,255,.15); }
-    .panel-header h2  { font-size: 1rem; font-weight: 600; }
-    .panel-body       { padding: 22px; }
+    .fch-icon.red  { background: rgba(224,92,92,.18); }
+    .fch-icon.blue { background: rgba(108,99,255,.18); }
+    .feature-card-header h2 { font-size: 1rem; font-weight: 600; }
+    .feature-card-body { padding: 24px; }
 
-    /* ── 表单控件 ── */
+    /* ── 表单 ── */
     label {
       display: block;
-      font-size: 0.8rem;
+      font-size: .78rem;
       color: var(--text-muted);
-      margin-bottom: 6px;
+      margin-bottom: 7px;
       font-weight: 500;
-      letter-spacing: 0.04em;
+      letter-spacing: .04em;
     }
+    .field { margin-bottom: 18px; }
+
+    input[type="text"],
+    input[type="number"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-size: .95rem;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input[type="text"]:focus,
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(108,99,255,.15);
+    }
+
     select {
       width: 100%;
       background: var(--surface2);
       border: 1px solid var(--border);
-      border-radius: 7px;
-      padding: 10px 14px;
+      border-radius: 8px;
+      padding: 11px 14px;
       color: var(--text);
-      font-size: 0.9rem;
+      font-size: .9rem;
       outline: none;
       cursor: pointer;
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237b82a0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 12px center;
-      padding-right: 32px;
+      padding-right: 34px;
       transition: border-color .2s;
     }
     select:focus { border-color: var(--accent); }
     select option { background: var(--surface2); color: var(--text); }
 
-    input[type="text"],
-    input[type="password"],
-    input[type="number"] {
-      width: 100%;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      padding: 10px 14px;
-      color: var(--text);
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color .2s;
-    }
-    input:focus { border-color: var(--accent); }
-    .field { margin-bottom: 16px; }
-    .field:last-of-type { margin-bottom: 0; }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
 
     /* ── 按钮 ── */
-    .row { display: flex; gap: 10px; flex-wrap: wrap; }
-    button {
-      padding: 10px 22px;
-      border: none;
-      border-radius: 7px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .2s, opacity .2s;
+    button.btn-accent {
+      padding: 11px 24px;
+      background: var(--accent); color: #fff;
+      border: none; border-radius: 8px;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      transition: background .2s, transform .1s;
     }
-    button:disabled { opacity: .45; cursor: not-allowed; }
-    .btn-accent  { background: var(--accent);  color: #fff; }
-    .btn-accent:hover:not(:disabled)  { background: var(--accent-hover); }
-    .btn-danger  { background: var(--danger);  color: #fff; }
-    .btn-danger:hover:not(:disabled)  { background: var(--danger-hover); }
-    .btn-outline {
+    button.btn-accent:hover:not(:disabled) { background: var(--accent-hover); }
+    button.btn-accent:active:not(:disabled) { transform: scale(.97); }
+    button.btn-accent:disabled { opacity: .45; cursor: not-allowed; }
+
+    button.btn-danger {
+      padding: 11px 24px;
+      background: var(--danger); color: #fff;
+      border: none; border-radius: 8px;
+      font-size: .9rem; font-weight: 600; cursor: pointer;
+      transition: background .2s, transform .1s;
+    }
+    button.btn-danger:hover:not(:disabled) { background: var(--danger-hover); }
+    button.btn-danger:active:not(:disabled) { transform: scale(.97); }
+    button.btn-danger:disabled { opacity: .45; cursor: not-allowed; }
+
+    button.btn-outline {
+      padding: 10px 20px;
       background: transparent;
       color: var(--text-muted);
       border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .88rem; font-weight: 600; cursor: pointer;
+      transition: border-color .2s, color .2s;
     }
-    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    button.btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    button.btn-outline:disabled { opacity: .45; cursor: not-allowed; }
 
     /* ── 结果区 ── */
     .result {
       margin-top: 18px;
       border-radius: 8px;
       padding: 14px 16px;
-      font-size: 0.85rem;
+      font-size: .84rem;
       line-height: 1.6;
       display: none;
       white-space: pre-wrap;
       word-break: break-all;
     }
-    .result.ok  { background: rgba(76,175,132,.1);  border: 1px solid rgba(76,175,132,.3);  color: #5dd8a0; }
-    .result.err { background: rgba(224,92,92,.1);   border: 1px solid rgba(224,92,92,.3);   color: #f08888; }
-    .result.show { display: block; }
+    .result.ok  { display: block; background: rgba(76,175,132,.1);  border: 1px solid rgba(76,175,132,.3);  color: #5dd8a0; }
+    .result.err { display: block; background: rgba(224,92,92,.1);   border: 1px solid rgba(224,92,92,.3);   color: #f08888; }
 
-    /* ── 用户资产卡 ── */
+    /* ── 资产卡 ── */
     .asset-card {
       background: var(--surface2);
       border: 1px solid var(--border);
@@ -203,22 +425,23 @@
     /* ── 确认弹窗 ── */
     .overlay {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,.6);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 999;
+      background: rgba(0,0,0,.65);
       display: none;
+      align-items: center; justify-content: center;
+      z-index: 999;
+      backdrop-filter: blur(3px);
     }
     .overlay.show { display: flex; }
     .dialog {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 28px;
-      max-width: 400px;
-      width: 90%;
+      padding: 30px;
+      max-width: 400px; width: 90%;
+      animation: fadeIn .2s ease;
     }
     .dialog h3 { margin-bottom: 10px; font-size: 1.05rem; }
-    .dialog p  { color: var(--text-muted); font-size: .88rem; margin-bottom: 22px; line-height: 1.6; }
+    .dialog p  { color: var(--text-muted); font-size: .88rem; margin-bottom: 24px; line-height: 1.65; }
     .dialog .row { justify-content: flex-end; }
 
     /* ── spinner ── */
@@ -234,17 +457,15 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── 顶部通知条 ── */
+    /* ── toast ── */
     .toast {
       position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
       padding: 10px 24px;
       border-radius: 24px;
-      font-size: .875rem;
-      font-weight: 600;
-      z-index: 1000;
-      opacity: 0;
+      font-size: .875rem; font-weight: 600;
+      z-index: 1000; opacity: 0;
       transition: opacity .3s;
-      pointer-events: none;
+      pointer-events: none; white-space: nowrap;
     }
     .toast.ok  { background: var(--success); color: #fff; }
     .toast.err { background: var(--danger);  color: #fff; }
@@ -253,60 +474,88 @@
 </head>
 <body>
 
-<h1>⚙️ 用户管理后台</h1>
-<p class="subtitle">仅供内部操作使用，请妥善保管操作密钥</p>
+<!-- ════════════════════════════════════
+     视图 1：索引页（含底部密钥抽屉）
+════════════════════════════════════ -->
+<div class="view active" id="view-index">
 
-<!-- ── 密钥输入 ── -->
-<div class="secret-bar">
-  <div class="field" style="margin-bottom:0">
-    <label for="adminSecret">操作密钥</label>
-    <input type="password" id="adminSecret" placeholder="输入操作密钥后按回车或点击验证" autocomplete="off" />
+  <!-- 主体内容 -->
+  <div class="index-main">
+    <div class="brand">
+      <div class="brand-icon">⚙️</div>
+      <h1>用户管理后台</h1>
+      <p>选择操作功能后输入密钥进入</p>
+    </div>
+
+    <div class="menu-grid" id="menuGrid">
+      <button class="menu-item" id="item-grant" onclick="selectFeature('grant')">
+        <div class="menu-icon blue">💰</div>
+        <div class="menu-text">
+          <strong>指定用户额度发放</strong>
+          <span>为指定手机号用户发放永久或临时使用额度</span>
+        </div>
+        <span class="menu-arrow">›</span>
+      </button>
+
+      <button class="menu-item" id="item-delete" onclick="selectFeature('delete')">
+        <div class="menu-icon red">🗑️</div>
+        <div class="menu-text">
+          <strong>指定用户删除</strong>
+          <span>永久删除用户数据库记录与身份认证信息</span>
+        </div>
+        <span class="menu-arrow">›</span>
+      </button>
+    </div>
   </div>
-  <button class="btn-outline" onclick="checkSecret()">验证</button>
-  <span class="secret-status idle" id="secretStatus">未验证</span>
+
+  <!-- 底部密钥抽屉 -->
+  <div class="secret-drawer" id="secretDrawer">
+    <div class="drawer-inner">
+      <div class="drawer-label">
+        <span id="drawer-label-text">验证操作密钥后进入功能</span>
+      </div>
+      <div class="drawer-input-row">
+        <input type="password" id="drawerSecret"
+               placeholder="输入操作密钥后按回车确认"
+               autocomplete="off" />
+        <button class="btn-confirm accent" id="drawerConfirmBtn" onclick="handleDrawerConfirm()">
+          确认进入
+        </button>
+      </div>
+      <div class="drawer-cancel">
+        <button onclick="cancelSelection()">取消选择</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- ── 功能面板 ── -->
-<div class="panels">
-
-  <!-- ── 面板1：用户删除 ── -->
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-icon red">🗑️</div>
-      <h2>用户删除</h2>
-    </div>
-    <div class="panel-body">
-      <div class="field">
-        <label for="deletePhone">用户手机号</label>
-        <input type="text" id="deletePhone" placeholder="+8613800138000 或 13800138000" maxlength="20" />
-      </div>
-      <div class="row">
-        <button class="btn-danger" onclick="confirmDelete()">删除用户</button>
-      </div>
-      <div class="result" id="deleteResult"></div>
-    </div>
+<!-- ════════════════════════════════════
+     视图 2：额度发放
+════════════════════════════════════ -->
+<div class="view feature-view" id="view-grant">
+  <div class="feature-topbar">
+    <button class="back-btn" onclick="goBack()">‹ 返回</button>
+    <span class="page-badge">额度发放</span>
   </div>
 
-  <!-- ── 面板2：额度发放 ── -->
-  <div class="panel">
-    <div class="panel-header">
-      <div class="panel-icon blue">💰</div>
+  <div class="feature-card">
+    <div class="feature-card-header">
+      <div class="fch-icon blue">💰</div>
       <h2>指定用户额度发放</h2>
     </div>
-    <div class="panel-body">
+    <div class="feature-card-body">
       <div class="field">
         <label for="grantPhone">用户手机号</label>
         <input type="text" id="grantPhone" placeholder="+8613800138000 或 13800138000" maxlength="20" />
       </div>
 
-      <div class="row" style="margin-bottom:16px">
-        <button class="btn-outline" style="flex:0 0 auto" onclick="queryAsset()">查看当前资产</button>
+      <div class="field">
+        <button class="btn-outline" onclick="queryAsset()">查看当前资产</button>
+        <div class="asset-card" id="assetCard"></div>
       </div>
 
-      <!-- 资产卡 -->
-      <div class="asset-card" id="assetCard"></div>
-
-      <div class="row" style="margin-top:16px; gap:12px">
+      <div class="row" style="gap:12px; margin-bottom:18px">
         <div class="field" style="flex:1; margin-bottom:0">
           <label for="grantBusinessLine">业务线</label>
           <select id="grantBusinessLine">
@@ -322,7 +571,8 @@
           </select>
         </div>
       </div>
-      <div class="field" style="margin-top:16px">
+
+      <div class="field">
         <label for="grantAmount">发放数量（张数，正整数）</label>
         <input type="number" id="grantAmount" placeholder="例如 50" min="1" step="1" />
       </div>
@@ -331,12 +581,38 @@
         <input type="text" id="grantReason" placeholder="例如：体验活动发放" />
       </div>
       <div class="row">
-        <button class="btn-accent" onclick="grantCredit()">发放额度</button>
+        <button class="btn-accent" id="grantBtn" onclick="grantCredit()">发放额度</button>
       </div>
       <div class="result" id="grantResult"></div>
     </div>
   </div>
+</div>
 
+<!-- ════════════════════════════════════
+     视图 3：用户删除
+════════════════════════════════════ -->
+<div class="view feature-view" id="view-delete">
+  <div class="feature-topbar">
+    <button class="back-btn" onclick="goBack()">‹ 返回</button>
+    <span class="page-badge">用户删除</span>
+  </div>
+
+  <div class="feature-card">
+    <div class="feature-card-header">
+      <div class="fch-icon red">🗑️</div>
+      <h2>指定用户删除</h2>
+    </div>
+    <div class="feature-card-body">
+      <div class="field">
+        <label for="deletePhone">用户手机号</label>
+        <input type="text" id="deletePhone" placeholder="+8613800138000 或 13800138000" maxlength="20" />
+      </div>
+      <div class="row">
+        <button class="btn-danger" id="deleteBtn" onclick="confirmDelete()">删除用户</button>
+      </div>
+      <div class="result" id="deleteResult"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ── 删除确认弹窗 ── -->
@@ -346,37 +622,127 @@
     <p id="confirmText">此操作不可撤销，将同时删除用户数据库记录和身份认证信息。</p>
     <div class="row">
       <button class="btn-outline" onclick="closeConfirm()">取消</button>
-      <button class="btn-danger" id="confirmOkBtn" onclick="doDelete()">确认删除</button>
+      <button class="btn-danger" onclick="doDelete()">确认删除</button>
     </div>
   </div>
 </div>
 
-<!-- ── 顶部通知条 ── -->
 <div class="toast" id="toast"></div>
 
 <script>
-  // ══════════════════════════════════════════════════════
-  //  配置：将下面的 SCF_URL 替换为你的 SCF HTTP 触发器地址
-  //  格式: https://xxxxx.ap-shanghai.tencentscf.com
-  //  或:   https://service-xxxx-xxxxxxxx.sh.apigw.tencentcs.com/release
-  // ══════════════════════════════════════════════════════
   const SCF_BASE_URL = 'https://YOUR_SCF_HTTP_TRIGGER_URL';
 
-  // ─── 工具函数 ───────────────────────────────────────────
+  let pendingFeature = null; // 'grant' | 'delete'
+
+  // ─── 视图管理 ────────────────────────────────────────────
+  function showView(id) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById('view-' + id).classList.add('active');
+    window.scrollTo(0, 0);
+  }
+
+  function goBack() {
+    // 清掉密钥输入，关闭抽屉，回索引
+    document.getElementById('drawerSecret').value = '';
+    cancelSelection();
+    showView('index');
+  }
+
+  // ─── 功能选择 + 抽屉 ─────────────────────────────────────
+  function selectFeature(name) {
+    pendingFeature = name;
+
+    // 高亮选中项，重置另一项
+    document.getElementById('item-grant').className  = 'menu-item' + (name === 'grant'  ? ' selected-grant'  : '');
+    document.getElementById('item-delete').className = 'menu-item' + (name === 'delete' ? ' selected-delete' : '');
+
+    // 更新抽屉样式
+    const labelEl  = document.getElementById('drawer-label-text');
+    const confirmBtn = document.getElementById('drawerConfirmBtn');
+    const secretInput = document.getElementById('drawerSecret');
+
+    if (name === 'grant') {
+      labelEl.textContent = '已选：额度发放 — 请输入操作密钥';
+      labelEl.className   = '';
+      confirmBtn.className = 'btn-confirm accent';
+      confirmBtn.textContent = '验证并进入';
+      secretInput.className  = '';
+    } else {
+      labelEl.textContent = '已选：用户删除 — 请输入操作密钥';
+      labelEl.className   = 'danger-mode';
+      confirmBtn.className = 'btn-confirm danger';
+      confirmBtn.textContent = '验证并进入';
+      secretInput.className  = 'danger-focus';
+    }
+
+    // 打开抽屉
+    document.getElementById('secretDrawer').classList.add('open');
+    setTimeout(() => document.getElementById('drawerSecret').focus(), 420);
+  }
+
+  function cancelSelection() {
+    pendingFeature = null;
+    document.getElementById('secretDrawer').classList.remove('open');
+    document.getElementById('item-grant').className  = 'menu-item';
+    document.getElementById('item-delete').className = 'menu-item';
+    document.getElementById('drawerSecret').value = '';
+  }
+
+  // 回车触发验证
+  document.getElementById('drawerSecret').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleDrawerConfirm();
+    if (e.key === 'Escape') cancelSelection();
+  });
+
+  // ─── 密钥验证 ────────────────────────────────────────────
+  async function handleDrawerConfirm() {
+    const secret = document.getElementById('drawerSecret').value.trim();
+    if (!secret) { showToast('请输入操作密钥', 'err'); return; }
+
+    const btn = document.getElementById('drawerConfirmBtn');
+    const orig = btn.textContent;
+    btn.innerHTML = '<span class="spin"></span>验证中…';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(SCF_BASE_URL + '/queryAsset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, phoneNumber: '__auth_check__' }),
+      });
+
+      if (res.status === 401) {
+        showToast('密钥错误，拒绝访问', 'err');
+        document.getElementById('drawerSecret').value = '';
+        document.getElementById('drawerSecret').focus();
+      } else {
+        // 保存密钥供后续 API 调用使用
+        window._adminSecret = secret;
+        showToast('验证通过', 'ok');
+        cancelSelection();
+        setTimeout(() => showView(pendingFeature || 'index'), 300);
+      }
+    } catch (e) {
+      showToast('网络错误: ' + e.message, 'err');
+    } finally {
+      btn.innerHTML = orig;
+      btn.disabled = false;
+    }
+  }
+
+  // ─── 工具函数 ────────────────────────────────────────────
   function getSecret() {
-    return document.getElementById('adminSecret').value.trim();
+    return window._adminSecret || '';
   }
 
   function showResult(elId, ok, text) {
     const el = document.getElementById(elId);
-    el.className = 'result show ' + (ok ? 'ok' : 'err');
+    el.className = 'result ' + (ok ? 'ok' : 'err');
     el.textContent = text;
   }
-
   function hideResult(elId) {
     const el = document.getElementById(elId);
-    el.className = 'result';
-    el.textContent = '';
+    el.className = 'result'; el.textContent = '';
   }
 
   function showToast(msg, type = 'ok') {
@@ -407,45 +773,8 @@
     return { ok: res.ok && json.success, json };
   }
 
-  // ─── 验证密钥 ────────────────────────────────────────────
-  async function checkSecret() {
-    const s = getSecret();
-    if (!s) { showToast('请先输入密钥', 'err'); return; }
-    const statusEl = document.getElementById('secretStatus');
-    statusEl.className = 'secret-status idle';
-    statusEl.textContent = '验证中…';
-    try {
-      // 用一个轻量查询测试鉴权（查询一个不存在的手机号，只看是否返回401）
-      const res = await fetch(SCF_BASE_URL + '/queryAsset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ secret: s, phoneNumber: '__auth_check__' }),
-      });
-      const json = await res.json();
-      if (res.status === 401) {
-        statusEl.className = 'secret-status err';
-        statusEl.textContent = '密钥错误';
-      } else {
-        // 404 = 用户不存在，但鉴权通过
-        statusEl.className = 'secret-status ok';
-        statusEl.textContent = '✓ 已验证';
-        showToast('密钥验证通过', 'ok');
-      }
-    } catch (e) {
-      statusEl.className = 'secret-status err';
-      statusEl.textContent = '网络错误';
-      showToast('网络错误: ' + e.message, 'err');
-    }
-  }
-
-  // 回车也能触发验证
-  document.getElementById('adminSecret').addEventListener('keydown', e => {
-    if (e.key === 'Enter') checkSecret();
-  });
-
-  // ─── 删除确认弹窗 ────────────────────────────────────────
+  // ─── 删除确认 ────────────────────────────────────────────
   function confirmDelete() {
-    if (!getSecret()) { showToast('请先输入并验证密钥', 'err'); return; }
     const phone = document.getElementById('deletePhone').value.trim();
     if (!phone) { showToast('请输入要删除的手机号', 'err'); return; }
     document.getElementById('confirmText').textContent =
@@ -459,14 +788,14 @@
   async function doDelete() {
     closeConfirm();
     const phone = document.getElementById('deletePhone').value.trim();
-    const btn = document.querySelector('.btn-danger');
+    const btn = document.getElementById('deleteBtn');
     hideResult('deleteResult');
     setLoading(btn, true);
     try {
       const { ok, json } = await apiFetch('/deleteUser', { phoneNumber: phone });
-      showResult('deleteResult', ok, ok
-        ? `✓ 删除成功\n${JSON.stringify(json.data, null, 2)}`
-        : `✗ 失败：${json.message}\n${JSON.stringify(json, null, 2)}`
+      showResult('deleteResult', ok,
+        ok ? `✓ 删除成功\n${JSON.stringify(json.data, null, 2)}`
+           : `✗ 失败：${json.message}\n${JSON.stringify(json, null, 2)}`
       );
       if (ok) showToast('用户删除成功', 'ok');
     } catch (e) {
@@ -478,32 +807,27 @@
 
   // ─── 查询资产 ─────────────────────────────────────────────
   async function queryAsset() {
-    if (!getSecret()) { showToast('请先输入并验证密钥', 'err'); return; }
     const phone = document.getElementById('grantPhone').value.trim();
     if (!phone) { showToast('请输入手机号', 'err'); return; }
-
     const btn = event.currentTarget;
     const cardEl = document.getElementById('assetCard');
     cardEl.className = 'asset-card';
     setLoading(btn, true);
-
     try {
       const { ok, json } = await apiFetch('/queryAsset', { phoneNumber: phone });
       if (ok && json.data) {
         const { userInfo, assetSummary, assetDetails } = json.data;
-        // 基础信息行
         const rows = [
-          ['手机号',         userInfo.phone_number || phone],
-          ['UID',            userInfo.uid || '—'],
-          ['昵称',           userInfo.nickName || '—'],
-          ['永久额度 (张)',   assetSummary.permanent_rename ?? '—'],
-          ['临时额度 (张)',   assetSummary.temporary_rename ?? '—'],
-          ['合计可用 (张)',   assetSummary.total ?? '—'],
+          ['手机号',        userInfo.phone_number || phone],
+          ['UID',           userInfo.uid || '—'],
+          ['昵称',          userInfo.nickName || '—'],
+          ['永久额度 (张)', assetSummary.permanent_rename ?? '—'],
+          ['临时额度 (张)', assetSummary.temporary_rename ?? '—'],
+          ['合计可用 (张)', assetSummary.total ?? '—'],
         ];
         let html = rows.map(([k, v]) =>
           `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`
         ).join('');
-        // 资产明细折叠
         if (assetDetails && assetDetails.length > 0) {
           html += `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--text-muted);font-size:.8rem">▸ 资产明细 (${assetDetails.length} 条)</summary><pre style="font-size:.75rem;margin-top:8px;color:var(--text-muted);overflow:auto;max-height:180px">${JSON.stringify(assetDetails, null, 2)}</pre></details>`;
         }
@@ -521,7 +845,6 @@
 
   // ─── 发放额度 ─────────────────────────────────────────────
   async function grantCredit() {
-    if (!getSecret()) { showToast('请先输入并验证密钥', 'err'); return; }
     const phone         = document.getElementById('grantPhone').value.trim();
     const amount        = document.getElementById('grantAmount').value.trim();
     const reason        = document.getElementById('grantReason').value.trim();
@@ -530,27 +853,23 @@
     if (!phone)  { showToast('请输入手机号', 'err'); return; }
     if (!amount || parseInt(amount) <= 0) { showToast('请输入有效的发放数量（正整数）', 'err'); return; }
 
-    const btn = document.querySelector('.btn-accent');
+    const btn = document.getElementById('grantBtn');
     hideResult('grantResult');
     setLoading(btn, true);
-
     try {
       const { ok, json } = await apiFetch('/grantCredit', {
-        phoneNumber: phone,
-        amount:      parseInt(amount),
-        business_line,
-        quota_type,
+        phoneNumber: phone, amount: parseInt(amount),
+        business_line, quota_type,
         source_type: 'event',
-        desc:        reason || undefined,
+        desc: reason || undefined,
       });
-      showResult('grantResult', ok, ok
-        ? `✓ 发放成功\n${JSON.stringify(json.data, null, 2)}`
-        : `✗ 失败：${json.message}\n${JSON.stringify(json, null, 2)}`
+      showResult('grantResult', ok,
+        ok ? `✓ 发放成功\n${JSON.stringify(json.data, null, 2)}`
+           : `✗ 失败：${json.message}\n${JSON.stringify(json, null, 2)}`
       );
       if (ok) {
         showToast('额度发放成功', 'ok');
         document.getElementById('grantAmount').value = '';
-        // 自动刷新资产卡
         await queryAsset();
       }
     } catch (e) {
