@@ -16,10 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Inject SCF URL
-        run: |
-          sed -i "s|__SCF_BASE_URL__|${{ secrets.SCF_BASE_URL }}|g" index.html
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
