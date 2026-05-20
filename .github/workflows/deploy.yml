@@ -18,7 +18,7 @@ jobs:
 
       - name: Inject SCF URL
         run: |
-          sed -i "s|__SCF_BASE_URL__|${{ vars.SCF_BASE_URL }}|g" index.html
+          sed -i "s|__SCF_BASE_URL__|${{ secrets.SCF_BASE_URL }}|g" index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
