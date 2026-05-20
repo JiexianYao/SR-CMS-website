@@ -715,13 +715,15 @@
         showToast('密钥错误，拒绝访问', 'err');
         document.getElementById('drawerSecret').value = '';
         document.getElementById('drawerSecret').focus();
-      } else {
-        // 保存密钥供后续 API 调用使用
+      } else if (res.ok || res.status === 404) {
+        // 404 = 用户不存在但密钥正确（__auth_check__ 是虚拟号码）
         window._adminSecret = secret;
         const target = pendingFeature;
         showToast('验证通过', 'ok');
         cancelSelection();
         setTimeout(() => showView(target || 'index'), 300);
+      } else {
+        showToast('服务器异常，请稍后重试 (HTTP ' + res.status + ')', 'err');
       }
     } catch (e) {
       showToast('网络错误: ' + e.message, 'err');
