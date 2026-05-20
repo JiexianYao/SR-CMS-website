@@ -551,7 +551,7 @@
       </div>
 
       <div class="field">
-        <button class="btn-outline" onclick="queryAsset()">查看当前资产</button>
+        <button class="btn-outline" id="queryAssetBtn" onclick="queryAsset()">查看当前资产</button>
         <div class="asset-card" id="assetCard"></div>
       </div>
 
@@ -812,7 +812,7 @@
   async function queryAsset() {
     const phone = document.getElementById('grantPhone').value.trim();
     if (!phone) { showToast('请输入手机号', 'err'); return; }
-    const btn = event.currentTarget;
+    const btn = document.getElementById('queryAssetBtn');
     const cardEl = document.getElementById('assetCard');
     cardEl.className = 'asset-card';
     setLoading(btn, true);
