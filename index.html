@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>用户管理后台 CMS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #23273a;
+      --border: #2e3347;
+      --accent: #6c63ff;
+      --accent-hover: #857dff;
+      --danger: #e05c5c;
+      --danger-hover: #f07070;
+      --success: #4caf84;
+      --text: #e2e6f0;
+      --text-muted: #7b82a0;
+      --radius: 10px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 16px;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+    .subtitle { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 32px; }
+
+    /* ── 密钥区 ── */
+    .secret-bar {
+      width: 100%;
+      max-width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      margin-bottom: 28px;
+    }
+    .secret-bar .field { flex: 1; }
+    .secret-status {
+      font-size: 0.8rem;
+      padding: 4px 12px;
+      border-radius: 20px;
+      white-space: nowrap;
+      align-self: center;
+    }
+    .secret-status.ok  { background: rgba(76,175,132,.15); color: var(--success); }
+    .secret-status.err { background: rgba(224,92,92,.15);  color: var(--danger);  }
+    .secret-status.idle{ background: var(--surface2); color: var(--text-muted); }
+
+    /* ── 面板 ── */
+    .panels {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel-header {
+      padding: 14px 22px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .panel-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+    }
+    .panel-icon.red   { background: rgba(224,92,92,.15);  }
+    .panel-icon.blue  { background: rgba(108,99,255,.15); }
+    .panel-header h2  { font-size: 1rem; font-weight: 600; }
+    .panel-body       { padding: 22px; }
+
+    /* ── 表单控件 ── */
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+    }
+    select {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237b82a0' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      transition: border-color .2s;
+    }
+    select:focus { border-color: var(--accent); }
+    select option { background: var(--surface2); color: var(--text); }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+    input:focus { border-color: var(--accent); }
+    .field { margin-bottom: 16px; }
+    .field:last-of-type { margin-bottom: 0; }
+
+    /* ── 按钮 ── */
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    button {
+      padding: 10px 22px;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, opacity .2s;
+    }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-accent  { background: var(--accent);  color: #fff; }
+    .btn-accent:hover:not(:disabled)  { background: var(--accent-hover); }
+    .btn-danger  { background: var(--danger);  color: #fff; }
+    .btn-danger:hover:not(:disabled)  { background: var(--danger-hover); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-outline:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+
+    /* ── 结果区 ── */
+    .result {
+      margin-top: 18px;
+      border-radius: 8px;
+      padding: 14px 16px;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      display: none;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .result.ok  { background: rgba(76,175,132,.1);  border: 1px solid rgba(76,175,132,.3);  color: #5dd8a0; }
+    .result.err { background: rgba(224,92,92,.1);   border: 1px solid rgba(224,92,92,.3);   color: #f08888; }
+    .result.show { display: block; }
+
+    /* ── 用户资产卡 ── */
+    .asset-card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-top: 14px;
+      display: none;
+    }
+    .asset-card.show { display: block; }
+    .asset-card .kv  { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); }
+    .asset-card .kv:last-child { border-bottom: none; }
+    .asset-card .k   { color: var(--text-muted); font-size: .82rem; }
+    .asset-card .v   { font-weight: 600; font-size: .9rem; }
+
+    /* ── 确认弹窗 ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.6);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+      display: none;
+    }
+    .overlay.show { display: flex; }
+    .dialog {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      max-width: 400px;
+      width: 90%;
+    }
+    .dialog h3 { margin-bottom: 10px; font-size: 1.05rem; }
+    .dialog p  { color: var(--text-muted); font-size: .88rem; margin-bottom: 22px; line-height: 1.6; }
+    .dialog .row { justify-content: flex-end; }
+
+    /* ── spinner ── */
+    .spin {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 顶部通知条 ── */
+    .toast {
+      position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+      padding: 10px 24px;
+      border-radius: 24px;
+      font-size: .875rem;
+      font-weight: 600;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity .3s;
+      pointer-events: none;
+    }
+    .toast.ok  { background: var(--success); color: #fff; }
+    .toast.err { background: var(--danger);  color: #fff; }
+    .toast.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<h1>⚙️ 用户管理后台</h1>
+<p class="subtitle">仅供内部操作使用，请妥善保管操作密钥</p>
+
+<!-- ── 密钥输入 ── -->
+<div class="secret-bar">
+  <div class="field" style="margin-bottom:0">
+    <label for="adminSecret">操作密钥</label>
+    <input type="password" id="adminSecret" placeholder="输入操作密钥后按回车或点击验证" autocomplete="off" />
+  </div>
+  <button class="btn-outline" onclick="checkSecret()">验证</button>
+  <span class="secret-status idle" id="secretStatus">未验证</span>
+</div>
+
+<!-- ── 功能面板 ── -->
+<div class="panels">
+
+  <!-- ── 面板1：用户删除 ── -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon red">🗑️</div>
+      <h2>用户删除</h2>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label for="deletePhone">用户手机号</label>
+        <input type="text" id="deletePhone" placeholder="+8613800138000 或 13800138000" maxlength="20" />
+      </div>
+      <div class="row">
+        <button class="btn-danger" onclick="confirmDelete()">删除用户</button>
+      </div>
+      <div class="result" id="deleteResult"></div>
+    </div>
+  </div>
+
+  <!-- ── 面板2：额度发放 ── -->
+  <div class="panel">
+    <div class="panel-header">
+      <div class="panel-icon blue">💰</div>
+      <h2>指定用户额度发放</h2>
+    </div>
+    <div class="panel-body">
+      <div class="field">
+        <label for="grantPhone">用户手机号</label>
+        <input type="text" id="grantPhone" placeholder="+8613800138000 或 13800138000" maxlength="20" />
+      </div>
+
+      <div class="row" style="margin-bottom:16px">
+        <button class="btn-outline" style="flex:0 0 auto" onclick="queryAsset()">查看当前资产</button>
+      </div>
+
+      <!-- 资产卡 -->
+      <div class="asset-card" id="assetCard"></div>
+
+      <div class="row" style="margin-top:16px; gap:12px">
+        <div class="field" style="flex:1; margin-bottom:0">
+          <label for="grantBusinessLine">业务线</label>
+          <select id="grantBusinessLine">
+            <option value="einvoice">einvoice（发票重命名）</option>
+            <option value="creditid">creditid（企业执照）</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1; margin-bottom:0">
+          <label for="grantQuotaType">额度类型</label>
+          <select id="grantQuotaType">
+            <option value="permanent_rename">permanent_rename（永久）</option>
+            <option value="temporary_rename">temporary_rename（临时）</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" style="margin-top:16px">
+        <label for="grantAmount">发放数量（张数，正整数）</label>
+        <input type="number" id="grantAmount" placeholder="例如 50" min="1" step="1" />
+      </div>
+      <div class="field">
+        <label for="grantReason">备注描述（可选）</label>
+        <input type="text" id="grantReason" placeholder="例如：体验活动发放" />
+      </div>
+      <div class="row">
+        <button class="btn-accent" onclick="grantCredit()">发放额度</button>
+      </div>
+      <div class="result" id="grantResult"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── 删除确认弹窗 ── -->
+<div class="overlay" id="confirmOverlay">
+  <div class="dialog">
+    <h3>⚠️ 确认删除用户？</h3>
+    <p id="confirmText">此操作不可撤销，将同时删除用户数据库记录和身份认证信息。</p>
+    <div class="row">
+      <button class="btn-outline" onclick="closeConfirm()">取消</button>
+      <button class="btn-danger" id="confirmOkBtn" onclick="doDelete()">确认删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── 顶部通知条 ── -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ══════════════════════════════════════════════════════
+  //  配置：将下面的 SCF_URL 替换为你的 SCF HTTP 触发器地址
+  //  格式: https://xxxxx.ap-shanghai.tencentscf.com
+  //  或:   https://service-xxxx-xxxxxxxx.sh.apigw.tencentcs.com/release
+  // ══════════════════════════════════════════════════════
+  const SCF_BASE_URL = 'https://YOUR_SCF_HTTP_TRIGGER_URL';
+
+  // ─── 工具函数 ───────────────────────────────────────────
+  function getSecret() {
+    return document.getElementById('adminSecret').value.trim();
+  }
+
+  function showResult(elId, ok, text) {
+    const el = document.getElementById(elId);
+    el.className = 'result show ' + (ok ? 'ok' : 'err');
+    el.textContent = text;
+  }
+
+  function hideResult(elId) {
+    const el = document.getElementById(elId);
+    el.className = 'result';
+    el.textContent = '';
+  }
+
+  function showToast(msg, type = 'ok') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast ' + type + ' visible';
+    setTimeout(() => t.className = 'toast ' + type, 2500);
+  }
+
+  function setLoading(btn, loading) {
+    if (loading) {
+      btn.dataset.origText = btn.innerHTML;
+      btn.innerHTML = '<span class="spin"></span>处理中…';
+      btn.disabled = true;
+    } else {
+      btn.innerHTML = btn.dataset.origText || btn.innerHTML;
+      btn.disabled = false;
+    }
+  }
+
+  async function apiFetch(path, data) {
+    const res = await fetch(SCF_BASE_URL + path, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret: getSecret(), ...data }),
+    });
+    const json = await res.json();
+    return { ok: res.ok && json.success, json };
+  }
+
+  // ─── 验证密钥 ────────────────────────────────────────────
+  async function checkSecret() {
+    const s = getSecret();
+    if (!s) { showToast('请先输入密钥', 'err'); return; }
+    const statusEl = document.getElementById('secretStatus');
+    statusEl.className = 'secret-status idle';
+    statusEl.textContent = '验证中…';
+    try {
+      // 用一个轻量查询测试鉴权（查询一个不存在的手机号，只看是否返回401）
+      const res = await fetch(SCF_BASE_URL + '/queryAsset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: s, phoneNumber: '__auth_check__' }),
+      });
+      const json = await res.json();
+      if (res.status === 401) {
+        statusEl.className = 'secret-status err';
+        statusEl.textContent = '密钥错误';
+      } else {
+        // 404 = 用户不存在，但鉴权通过
+        statusEl.className = 'secret-status ok';
+        statusEl.textContent = '✓ 已验证';
+        showToast('密钥验证通过', 'ok');
+      }
+    } catch (e) {
+      statusEl.className = 'secret-status err';
+      statusEl.textContent = '网络错误';
+      showToast('网络错误: ' + e.message, 'err');
+    }
+  }
+
+  // 回车也能触发验证
+  document.getElementById('adminSecret').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkSecret();
+  });
+
+  // ─── 删除确认弹窗 ────────────────────────────────────────
+  function confirmDelete() {
+    if (!getSecret()) { showToast('请先输入并验证密钥', 'err'); return; }
+    const phone = document.getElementById('deletePhone').value.trim();
+    if (!phone) { showToast('请输入要删除的手机号', 'err'); return; }
+    document.getElementById('confirmText').textContent =
+      `将永久删除手机号为「${phone}」的用户，包括数据库记录和身份认证信息，此操作不可撤销！`;
+    document.getElementById('confirmOverlay').classList.add('show');
+  }
+  function closeConfirm() {
+    document.getElementById('confirmOverlay').classList.remove('show');
+  }
+
+  async function doDelete() {
+    closeConfirm();
+    const phone = document.getElementById('deletePhone').value.trim();
+    const btn = document.querySelector('.btn-danger');
+    hideResult('deleteResult');
+    setLoading(btn, true);
+    try {
+      const { ok, json } = await apiFetch('/deleteUser', { phoneNumber: phone });
+      showResult('deleteResult', ok, ok
+        ? `✓ 删除成功\n${JSON.stringify(json.data, null, 2)}`
+        : `✗ 失败：${json.message}\n${JSON.stringify(json, null, 2)}`
+      );
+      if (ok) showToast('用户删除成功', 'ok');
+    } catch (e) {
+      showResult('deleteResult', false, '请求失败: ' + e.message);
+    } finally {
+      setLoading(btn, false);
+    }
+  }
+
+  // ─── 查询资产 ─────────────────────────────────────────────
+  async function queryAsset() {
+    if (!getSecret()) { showToast('请先输入并验证密钥', 'err'); return; }
+    const phone = document.getElementById('grantPhone').value.trim();
+    if (!phone) { showToast('请输入手机号', 'err'); return; }
+
+    const btn = event.currentTarget;
+    const cardEl = document.getElementById('assetCard');
+    cardEl.className = 'asset-card';
+    setLoading(btn, true);
+
+    try {
+      const { ok, json } = await apiFetch('/queryAsset', { phoneNumber: phone });
+      if (ok && json.data) {
+        const { userInfo, assetSummary, assetDetails } = json.data;
+        // 基础信息行
+        const rows = [
+          ['手机号',         userInfo.phone_number || phone],
+          ['UID',            userInfo.uid || '—'],
+          ['昵称',           userInfo.nickName || '—'],
+          ['永久额度 (张)',   assetSummary.permanent_rename ?? '—'],
+          ['临时额度 (张)',   assetSummary.temporary_rename ?? '—'],
+          ['合计可用 (张)',   assetSummary.total ?? '—'],
+        ];
+        let html = rows.map(([k, v]) =>
+          `<div class="kv"><span class="k">${k}</span><span class="v">${v}</span></div>`
+        ).join('');
+        // 资产明细折叠
+        if (assetDetails && assetDetails.length > 0) {
+          html += `<details style="margin-top:10px"><summary style="cursor:pointer;color:var(--text-muted);font-size:.8rem">▸ 资产明细 (${assetDetails.length} 条)</summary><pre style="font-size:.75rem;margin-top:8px;color:var(--text-muted);overflow:auto;max-height:180px">${JSON.stringify(assetDetails, null, 2)}</pre></details>`;
+        }
+        cardEl.innerHTML = html;
+        cardEl.classList.add('show');
+      } else {
+        showToast(json.message || '查询失败', 'err');
+      }
+    } catch (e) {
+      showToast('请求失败: ' + e.message, 'err');
+    } finally {
+      setLoading(btn, false);
+    }
+  }
+
+  // ─── 发放额度 ─────────────────────────────────────────────
+  async function grantCredit() {
+    if (!getSecret()) { showToast('请先输入并验证密钥', 'err'); return; }
+    const phone         = document.getElementById('grantPhone').value.trim();
+    const amount        = document.getElementById('grantAmount').value.trim();
+    const reason        = document.getElementById('grantReason').value.trim();
+    const business_line = document.getElementById('grantBusinessLine').value;
+    const quota_type    = document.getElementById('grantQuotaType').value;
+    if (!phone)  { showToast('请输入手机号', 'err'); return; }
+    if (!amount || parseInt(amount) <= 0) { showToast('请输入有效的发放数量（正整数）', 'err'); return; }
+
+    const btn = document.querySelector('.btn-accent');
+    hideResult('grantResult');
+    setLoading(btn, true);
+
+    try {
+      const { ok, json } = await apiFetch('/grantCredit', {
+        phoneNumber: phone,
+        amount:      parseInt(amount),
+        business_line,
+        quota_type,
+        source_type: 'event',
+        desc:        reason || undefined,
+      });
+      showResult('grantResult', ok, ok
+        ? `✓ 发放成功\n${JSON.stringify(json.data, null, 2)}`
+        : `✗ 失败：${json.message}\n${JSON.stringify(json, null, 2)}`
+      );
+      if (ok) {
+        showToast('额度发放成功', 'ok');
+        document.getElementById('grantAmount').value = '';
+        // 自动刷新资产卡
+        await queryAsset();
+      }
+    } catch (e) {
+      showResult('grantResult', false, '请求失败: ' + e.message);
+    } finally {
+      setLoading(btn, false);
+    }
+  }
+</script>
+</body>
+</html>
